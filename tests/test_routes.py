@@ -7,6 +7,7 @@ Test cases can be run with the following:
 """
 import os
 import logging
+from datetime import date
 from unittest import TestCase
 from tests.factories import AccountFactory
 from service.common import status  # HTTP Status Codes
@@ -123,4 +124,42 @@ class TestAccountService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    # ADD YOUR TEST CASES HERE ...
+    def test_read_an_account(self):
+        """It should Read a single Account"""
+        account = self._create_accounts(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{account.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["name"], account.name)
+        self.assertEqual(data["email"], account.email)
+        self.assertEqual(data["address"], account.address)
+        self.assertEqual(data["phone_number"], account.phone_number)
+        self.assertEqual(data["date_joined"], str(account.date_joined))
+
+        stored = Account.find(account.id)
+        self.assertEqual(
+            repr(stored), f"<Account {stored.name} id=[{stored.id}]>"
+        )
+
+        # date_joined is optional on create; read must return the default
+        payload = account.serialize()
+        payload.pop("id", None)
+        payload.pop("date_joined", None)
+        created = self.client.post(BASE_URL, json=payload)
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED)
+        created_account = created.get_json()
+        self.assertEqual(
+            created_account["date_joined"], date.today().isoformat()
+        )
+        reread = self.client.get(f"{BASE_URL}/{created_account['id']}")
+        self.assertEqual(reread.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            reread.get_json()["date_joined"], date.today().isoformat()
+        )
+
+    def test_get_account_not_found(self):
+        """It should not Read an Account that is not found"""
+        resp = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
