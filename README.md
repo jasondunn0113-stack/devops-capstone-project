@@ -1,5 +1,7 @@
 # devops-capstone-project
 
+![Build Status](https://github.com/jasondunn0113-stack/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
+
 This capstone project builds a customer accounts microservice for an e-commerce site: a Python Flask REST API to create, read, update, delete and list customer accounts, developed with Agile planning, TDD, CI/CD, Docker and Kubernetes.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
